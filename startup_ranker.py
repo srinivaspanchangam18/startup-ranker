@@ -25,7 +25,7 @@ weights = {
 # Scoring Function
 def score_new_startup(new_data, quarter, existing_data):
     new_data['quarter'] = str(quarter)
-    temp_data = existing_data[existing_data['quarter'] == str(quarter)].copy()
+    temp_data = existing_data.copy()
     temp_data = pd.concat([temp_data, new_data], ignore_index=True)
 
     scaler = MinMaxScaler()
@@ -101,3 +101,4 @@ if st.button("Get Rank"):
     score, rank, total = score_new_startup(new_data, quarter, existing_data)
     st.success(f"Performance Score: **{score:.4f}**")
     st.info(f"Ranked **#{rank} out of {total} startups** in Quarter {quarter}")
+
