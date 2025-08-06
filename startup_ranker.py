@@ -1,16 +1,13 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 
-# Load your existing normalized dataset with performance_score
+# Load the dataset
 @st.cache_data
 def load_data():
-    # Change path as needed
-    df = pd.read_csv("normalized_per.csv")  # The normalized dataset
-    return df
+    return pd.read_csv("normalized_per.csv")
 
-# Define KPI columns and weights
+# KPI columns and weights
 kpi_cols = ['turnover', 'total_funding', 'employees', 'dev_stage_score', 'rev_per_emp', 'gst_filed']
 weights = {
     'turnover': 0.20,
@@ -22,11 +19,9 @@ weights = {
     'status_score': 0.10
 }
 
-# Scoring Function
-def score_new_startup(new_data, quarter, existing_data):
-    new_data['quarter'] = str(quarter)
-    temp_data = existing_data.copy()
-    temp_data = pd.concat([temp_data, new_data], ignore_index=True)
+# Scoring function (uses all data for better normalization)
+def score_new_startup(new_data, existing_data):
+    temp_data = pd.concat([existing_data.copy(), new_data], ignore_index=True)
 
     scaler = MinMaxScaler()
     temp_data[kpi_cols] = scaler.fit_transform(temp_data[kpi_cols])
@@ -47,29 +42,29 @@ def score_new_startup(new_data, quarter, existing_data):
     return new_score, new_rank, len(temp_data)
 
 # Streamlit UI
-st.title("Startup Performance Ranker - AIC Tool")
-st.markdown("Input your startup data and get a performance rank compared to existing AIC startups.")
+st.title("Startup Performance Ranker")
 
-# User Inputs
-turnover = st.number_input("Turnover", value=500000)
-external_loans = st.number_input("External Loans", value=100000)
-angel_funds = st.number_input("Angel Funds", value=20000)
-vc_funds = st.number_input("VC Funds", value=50000)
-other_funds = st.number_input("Other Funds", value=10000)
-aic_funds = st.number_input("AIC Funds", value=50000)
-employees = st.number_input("Number of Employees", value=10)
+st.markdown("Enter your startup details below:")
 
-proof_of_concept = st.checkbox("Proof of Concept", value=True)
-prototype_development = st.checkbox("Prototype Development", value=True)
-product_development = st.checkbox("Product Development", value=True)
+# User Inputs (no default values)
+turnover = st.number_input("Turnover", min_value=0.0)
+external_loans = st.number_input("External Loans", min_value=0.0)
+angel_funds = st.number_input("Angel Funds", min_value=0.0)
+vc_funds = st.number_input("VC Funds", min_value=0.0)
+other_funds = st.number_input("Other Funds", min_value=0.0)
+aic_funds = st.number_input("AIC Funds", min_value=0.0)
+employees = st.number_input("Number of Employees", min_value=0)
+
+proof_of_concept = st.checkbox("Proof of Concept")
+prototype_development = st.checkbox("Prototype Development")
+product_development = st.checkbox("Product Development")
 field_trials = st.checkbox("Field Trials")
 market_launch = st.checkbox("Market Launch")
 
 gst_filed = st.selectbox("GST Filed", options=[1, 0])
 status = st.selectbox("Current Status", options=["Active", "Graduated"])
-quarter = st.text_input("Quarter (e.g., Q1, Q2, Q3, Q4)", value="Q2")
 
-# Button to Score
+# Run when button clicked
 if st.button("Get Rank"):
     new_data = pd.DataFrame([{
         'turnover': turnover,
@@ -88,17 +83,16 @@ if st.button("Get Rank"):
         'current_status': status
     }])
 
-    # Feature engineering
-    new_data['total_funding'] = new_data[['external_loans', 'angel_funds', 'vc_funds', 'other_funds','aic_funds']].sum(axis=1)
+    # Feature Engineering
+    new_data['total_funding'] = new_data[['external_loans', 'angel_funds', 'vc_funds', 'other_funds', 'aic_funds']].sum(axis=1)
     new_data['dev_stage_score'] = new_data[['proof_of_concept', 'prototype_development', 'product_development', 'field_trails', 'market_launch']].sum(axis=1)
-    new_data['status_score'] = new_data['current_status'].map({'Active': 1,'Graduated': 0})
+    new_data['status_score'] = new_data['current_status'].map({'Active': 1, 'Graduated': 0})
     new_data['rev_per_emp'] = new_data['turnover'] / new_data['employees'].replace(0, 1)
 
-    # Load data
     existing_data = load_data()
+    score, rank, total = score_new_startup(new_data, existing_data)
 
-    # Score and rank
-    score, rank, total = score_new_startup(new_data, quarter, existing_data)
     st.success(f"Performance Score: **{score:.4f}**")
-    st.info(f"Ranked **#{rank} out of {total} startups** in Quarter {quarter}")
+    st.info(f"Ranked **#{rank} out of {total} startups**")
+
 
