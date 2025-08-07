@@ -2,12 +2,12 @@ import streamlit as st
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 
-# Load original dataset
+# Load original dataset once and cache
 @st.cache_data
 def load_data():
-    return pd.read_csv("AIC_DATA - Copied.csv")
+    return pd.read_csv("normalized_per.csv")
 
-# KPI columns and weights
+# KPI columns and their weights
 kpi_cols = ['turnover', 'total_funding', 'employees', 'dev_stage_score', 'rev_per_emp', 'gst_filed']
 weights = {
     'turnover': 0.20,
@@ -19,9 +19,9 @@ weights = {
     'status_score': 0.10
 }
 
-# Scoring function (compare ONLY to original dataset)
-def score_new_startup(new_data, existing_data):
-    temp_data = pd.concat([existing_data.copy(), new_data], ignore_index=True)
+# Compute score and rank (without affecting original dataset)
+def score_new_startup(new_data, original_data):
+    temp_data = pd.concat([original_data.copy(), new_data], ignore_index=True)
 
     scaler = MinMaxScaler()
     temp_data[kpi_cols] = scaler.fit_transform(temp_data[kpi_cols])
@@ -36,24 +36,24 @@ def score_new_startup(new_data, existing_data):
         temp_data['status_score'] * weights['status_score']
     )
 
-    temp_data['rank'] = temp_data['performance_score'].rank(method='min', ascending=False)
+    temp_data['rounded_score'] = temp_data['performance_score'].round(4)
+    temp_data['rank'] = temp_data['rounded_score'].rank(method='min', ascending=False)
 
-    new_score = temp_data.iloc[-1]['performance_score']
+    new_score = temp_data.iloc[-1]['rounded_score']
     new_rank = int(temp_data.iloc[-1]['rank'])
-    total = len(temp_data)
-    return new_score, new_rank, total
+    return new_score, new_rank
 
 # Streamlit UI
 st.title("Startup Performance Ranker")
 
-# Store previous results (just for display)
+# Store session results
 if "results" not in st.session_state:
-    st.session_state["results"] = pd.DataFrame(columns=["Startup", "Score", "Rank", "Total"])
+    st.session_state["results"] = pd.DataFrame(columns=["Startup", "Score", "Rank"])
 
-# Input section
+# Input Section
 st.subheader("Enter Startup Details")
 
-startup_name = st.text_input("Startup Name (e.g., S1, MyStartup)")
+startup_name = st.text_input("Startup Name")
 
 turnover = st.number_input("Turnover", min_value=0.0, step=1000.0)
 external_loans = st.number_input("External Loans", min_value=0.0, step=1000.0)
@@ -72,10 +72,10 @@ market_launch = st.checkbox("Market Launch")
 gst_filed = st.selectbox("GST Filed", options=[1, 0])
 status = st.selectbox("Current Status", options=["Active", "Graduated"])
 
-# Button
+# Compute score and rank
 if st.button("Get Rank"):
     if startup_name.strip() == "":
-        st.warning("Please enter a name for the startup.")
+        st.warning("Please enter a startup name.")
     else:
         new_data = pd.DataFrame([{
             'turnover': turnover,
@@ -94,32 +94,31 @@ if st.button("Get Rank"):
             'current_status': status
         }])
 
-        # Feature Engineering
+        # Feature engineering
         new_data['total_funding'] = new_data[['external_loans', 'angel_funds', 'vc_funds', 'other_funds', 'aic_funds']].sum(axis=1)
         new_data['dev_stage_score'] = new_data[['proof_of_concept', 'prototype_development', 'product_development', 'field_trails', 'market_launch']].sum(axis=1)
         new_data['status_score'] = new_data['current_status'].map({'Active': 1, 'Graduated': 0})
         new_data['rev_per_emp'] = new_data['turnover'] / new_data['employees'].replace(0, 1)
 
-        existing_data = load_data()  # DO NOT include previously added startups
+        original_data = load_data()
 
-        score, rank, total = score_new_startup(new_data, existing_data)
+        score, rank = score_new_startup(new_data, original_data)
 
         st.session_state["results"] = pd.concat([
             st.session_state["results"],
             pd.DataFrame([{
                 "Startup": startup_name,
                 "Score": round(score, 4),
-                "Rank": rank,
-                "Total": total
+                "Rank": rank
             }])
         ], ignore_index=True)
 
         st.success(f"Performance Score: **{score:.4f}**")
-        st.info(f"Ranked **#{rank} out of {total} startups**")
+        st.info(f"Ranked **#{rank}**")
 
-# Show results
+# Show session results
 if not st.session_state["results"].empty:
-    st.subheader("All Scored Startups This Session")
+    st.subheader("Scored Startups This Session")
     st.dataframe(st.session_state["results"])
 
     st.download_button(
@@ -128,4 +127,3 @@ if not st.session_state["results"].empty:
         file_name='startup_scores.csv',
         mime='text/csv'
     )
-
