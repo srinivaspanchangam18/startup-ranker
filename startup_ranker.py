@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 
-# Load existing data
+# Load original dataset
 @st.cache_data
 def load_data():
     return pd.read_csv("normalized_per.csv")
@@ -19,7 +19,7 @@ weights = {
     'status_score': 0.10
 }
 
-# Scoring function
+# Scoring function (compare ONLY to original dataset)
 def score_new_startup(new_data, existing_data):
     temp_data = pd.concat([existing_data.copy(), new_data], ignore_index=True)
 
@@ -36,19 +36,21 @@ def score_new_startup(new_data, existing_data):
         temp_data['status_score'] * weights['status_score']
     )
 
-    temp_data['rank'] = temp_data['performance_score'].rank(ascending=False)
+    temp_data['rank'] = temp_data['performance_score'].rank(method='min', ascending=False)
+
     new_score = temp_data.iloc[-1]['performance_score']
     new_rank = int(temp_data.iloc[-1]['rank'])
-    return new_score, new_rank, len(temp_data)
+    total = len(temp_data)
+    return new_score, new_rank, total
 
 # Streamlit UI
 st.title("Startup Performance Ranker")
 
-# Initialize session state to store results
+# Store previous results (just for display)
 if "results" not in st.session_state:
     st.session_state["results"] = pd.DataFrame(columns=["Startup", "Score", "Rank", "Total"])
 
-# Input fields
+# Input section
 st.subheader("Enter Startup Details")
 
 startup_name = st.text_input("Startup Name (e.g., S1, MyStartup)")
@@ -70,7 +72,7 @@ market_launch = st.checkbox("Market Launch")
 gst_filed = st.selectbox("GST Filed", options=[1, 0])
 status = st.selectbox("Current Status", options=["Active", "Graduated"])
 
-# Button to score
+# Button
 if st.button("Get Rank"):
     if startup_name.strip() == "":
         st.warning("Please enter a name for the startup.")
@@ -98,10 +100,10 @@ if st.button("Get Rank"):
         new_data['status_score'] = new_data['current_status'].map({'Active': 1, 'Graduated': 0})
         new_data['rev_per_emp'] = new_data['turnover'] / new_data['employees'].replace(0, 1)
 
-        existing_data = load_data()
+        existing_data = load_data()  # DO NOT include previously added startups
+
         score, rank, total = score_new_startup(new_data, existing_data)
 
-        # Store result in session
         st.session_state["results"] = pd.concat([
             st.session_state["results"],
             pd.DataFrame([{
@@ -112,16 +114,14 @@ if st.button("Get Rank"):
             }])
         ], ignore_index=True)
 
-        # Display current result
         st.success(f"Performance Score: **{score:.4f}**")
         st.info(f"Ranked **#{rank} out of {total} startups**")
 
-# Show all session results
+# Show results
 if not st.session_state["results"].empty:
     st.subheader("All Scored Startups This Session")
     st.dataframe(st.session_state["results"])
 
-    # Optional: download results
     st.download_button(
         label="Download Results as CSV",
         data=st.session_state["results"].to_csv(index=False).encode('utf-8'),
