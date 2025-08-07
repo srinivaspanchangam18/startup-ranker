@@ -2,12 +2,12 @@ import streamlit as st
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 
-# Load original dataset once and cache
+# Load original dataset (normalized_per.csv)
 @st.cache_data
 def load_data():
-    return pd.read_csv("AIC_DATA - Copied.csv")
+    return pd.read_csv("normalized_per.csv")
 
-# KPI columns and their weights
+# KPI columns & Weights
 kpi_cols = ['turnover', 'total_funding', 'employees', 'dev_stage_score', 'rev_per_emp', 'gst_filed']
 weights = {
     'turnover': 0.20,
@@ -19,7 +19,7 @@ weights = {
     'status_score': 0.10
 }
 
-# Compute score and rank (without affecting original dataset)
+# Compute score & correct rank (dense)
 def score_new_startup(new_data, original_data):
     temp_data = pd.concat([original_data.copy(), new_data], ignore_index=True)
 
@@ -37,7 +37,9 @@ def score_new_startup(new_data, original_data):
     )
 
     temp_data['rounded_score'] = temp_data['performance_score'].round(4)
-    temp_data['rank'] = temp_data['rounded_score'].rank(method='min', ascending=False)
+    
+    # ✅ FIXED RANKING METHOD
+    temp_data['rank'] = temp_data['rounded_score'].rank(method='dense', ascending=False)
 
     new_score = temp_data.iloc[-1]['rounded_score']
     new_rank = int(temp_data.iloc[-1]['rank'])
@@ -46,7 +48,6 @@ def score_new_startup(new_data, original_data):
 # Streamlit UI
 st.title("Startup Performance Ranker")
 
-# Store session results
 if "results" not in st.session_state:
     st.session_state["results"] = pd.DataFrame(columns=["Startup", "Score", "Rank"])
 
@@ -72,7 +73,7 @@ market_launch = st.checkbox("Market Launch")
 gst_filed = st.selectbox("GST Filed", options=[1, 0])
 status = st.selectbox("Current Status", options=["Active", "Graduated"])
 
-# Compute score and rank
+# Compute score & update session state
 if st.button("Get Rank"):
     if startup_name.strip() == "":
         st.warning("Please enter a startup name.")
@@ -94,14 +95,12 @@ if st.button("Get Rank"):
             'current_status': status
         }])
 
-        # Feature engineering
         new_data['total_funding'] = new_data[['external_loans', 'angel_funds', 'vc_funds', 'other_funds', 'aic_funds']].sum(axis=1)
         new_data['dev_stage_score'] = new_data[['proof_of_concept', 'prototype_development', 'product_development', 'field_trails', 'market_launch']].sum(axis=1)
         new_data['status_score'] = new_data['current_status'].map({'Active': 1, 'Graduated': 0})
         new_data['rev_per_emp'] = new_data['turnover'] / new_data['employees'].replace(0, 1)
 
         original_data = load_data()
-
         score, rank = score_new_startup(new_data, original_data)
 
         st.session_state["results"] = pd.concat([
@@ -116,7 +115,7 @@ if st.button("Get Rank"):
         st.success(f"Performance Score: **{score:.4f}**")
         st.info(f"Ranked **#{rank}**")
 
-# Show session results
+# Show table of results
 if not st.session_state["results"].empty:
     st.subheader("Scored Startups This Session")
     st.dataframe(st.session_state["results"])
@@ -127,4 +126,3 @@ if not st.session_state["results"].empty:
         file_name='startup_scores.csv',
         mime='text/csv'
     )
-
