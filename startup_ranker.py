@@ -5,7 +5,7 @@ from sklearn.preprocessing import MinMaxScaler
 # Load original dataset
 @st.cache_data
 def load_data():
-    return pd.read_csv("normalized_per.csv")
+    return pd.read_csv("AIC_DATA - Copied.csv")
 
 # KPI columns and weights
 kpi_cols = ['turnover', 'total_funding', 'employees', 'dev_stage_score', 'rev_per_emp', 'gst_filed']
@@ -128,3 +128,4 @@ if not st.session_state["results"].empty:
         file_name='startup_scores.csv',
         mime='text/csv'
     )
+
