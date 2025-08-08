@@ -16,6 +16,17 @@ weights = {
     'status_score': 0.1
 }
 
+# Maximum possible values for normalization
+max_values = {
+    'turnover': 1000000,       # Example: max turnover is 1M
+    'total_funding': 1000000,  # Example: max funding is 1M
+    'employees': 1000,         # Example: max 1000 employees
+    'dev_stage_score': 5,      # 5 stages max
+    'rev_per_emp': 100000,     # Example: max revenue per employee is 100k
+    'gst_filed': 1,            # 1 or 0
+    'status_score': 1          # 1 or 0
+}
+
 # Load existing results if file exists
 if "results" not in st.session_state:
     if os.path.exists(DATA_FILE):
@@ -59,15 +70,15 @@ if st.button("Calculate Rank"):
     if startup_name.strip() == "":
         st.error("Please enter a startup name.")
     else:
-        # Calculate performance score
+        # Normalize each metric before weighting
         score = (
-            turnover * weights['turnover'] +
-            total_funding * weights['total_funding'] +
-            employees * weights['employees'] +
-            dev_stage_score * weights['dev_stage_score'] +
-            rev_per_emp * weights['rev_per_emp'] +
-            gst_filed * weights['gst_filed'] +
-            status_score * weights['status_score']
+            (turnover / max_values['turnover']) * weights['turnover'] +
+            (total_funding / max_values['total_funding']) * weights['total_funding'] +
+            (employees / max_values['employees']) * weights['employees'] +
+            (dev_stage_score / max_values['dev_stage_score']) * weights['dev_stage_score'] +
+            (rev_per_emp / max_values['rev_per_emp']) * weights['rev_per_emp'] +
+            (gst_filed / max_values['gst_filed']) * weights['gst_filed'] +
+            (status_score / max_values['status_score']) * weights['status_score']
         )
 
         # Add startup and score to session data
