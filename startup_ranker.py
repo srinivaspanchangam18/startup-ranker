@@ -30,10 +30,25 @@ startup_name = st.text_input("Enter Startup Name")
 turnover = st.number_input("Turnover", min_value=0.0, step=0.01)
 total_funding = st.number_input("Total Funding", min_value=0.0, step=0.01)
 employees = st.number_input("Number of Employees", min_value=0.0, step=0.01)
-dev_stage_score = st.number_input("Development Stage Score", min_value=0.0, step=0.01)
 rev_per_emp = st.number_input("Revenue per Employee", min_value=0.0, step=0.01)
 gst_filed = st.number_input("GST Filed (1 if yes, 0 if no)", min_value=0.0, step=0.01)
 status_score = st.number_input("Status Score", min_value=0.0, step=0.01)
+
+st.subheader("Development Stages")
+proof_of_concept = st.checkbox("Proof of Concept")
+prototype_development = st.checkbox("Prototype Development")
+product_development = st.checkbox("Product Development")
+field_trials = st.checkbox("Field Trials")
+market_launch = st.checkbox("Market Launch")
+
+# Calculate dev_stage_score from checkboxes
+dev_stage_score = sum([
+    proof_of_concept,
+    prototype_development,
+    product_development,
+    field_trials,
+    market_launch
+])
 
 if st.button("Calculate Rank"):
     if startup_name.strip() == "":
