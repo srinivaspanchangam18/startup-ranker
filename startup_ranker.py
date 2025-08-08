@@ -1,5 +1,9 @@
 import streamlit as st
 import pandas as pd
+import os
+
+# File to store results
+DATA_FILE = "startup_results.csv"
 
 # Weight configuration
 weights = {
@@ -12,9 +16,12 @@ weights = {
     'status_score': 0.1
 }
 
-# Initialize results storage
+# Load existing results if file exists
 if "results" not in st.session_state:
-    st.session_state["results"] = pd.DataFrame(columns=["Startup", "Score", "Rank"])
+    if os.path.exists(DATA_FILE):
+        st.session_state["results"] = pd.read_csv(DATA_FILE)
+    else:
+        st.session_state["results"] = pd.DataFrame(columns=["Startup", "Performance Score", "Rank"])
 
 st.title("Startup Ranker")
 
@@ -46,15 +53,18 @@ if st.button("Calculate Rank"):
         # Add startup and score to session data
         st.session_state["results"] = pd.concat([
             st.session_state["results"],
-            pd.DataFrame([{"Startup": startup_name, "Score": round(score, 4)}])
+            pd.DataFrame([{"Startup": startup_name, "Performance Score": round(score, 4)}])
         ], ignore_index=True)
 
         # Rank startups (highest score = rank 1)
-        st.session_state["results"]["Rank"] = st.session_state["results"]["Score"].rank(
+        st.session_state["results"]["Rank"] = st.session_state["results"]["Performance Score"].rank(
             method="dense", ascending=False
         ).astype(int)
 
-        # Show result
+        # Save to CSV
+        st.session_state["results"].to_csv(DATA_FILE, index=False)
+
+        # Show current startup rank
         current_rank = st.session_state["results"].loc[
             st.session_state["results"]["Startup"] == startup_name, "Rank"
         ].iloc[-1]
@@ -62,7 +72,7 @@ if st.button("Calculate Rank"):
         st.success(f"Performance Score: **{score:.4f}**")
         st.info(f"Ranked **#{current_rank}**")
 
-# Show all results so far
+# Show results table at the end
 if not st.session_state["results"].empty:
-    st.subheader("Scored Startups This Session")
-    st.dataframe(st.session_state["results"])
+    st.subheader("All Scored Startups")
+    st.dataframe(st.session_state["results"].sort_values(by="Rank"))
