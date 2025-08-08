@@ -31,24 +31,29 @@ turnover = st.number_input("Turnover", min_value=0.0, step=0.01)
 total_funding = st.number_input("Total Funding", min_value=0.0, step=0.01)
 employees = st.number_input("Number of Employees", min_value=0.0, step=0.01)
 rev_per_emp = st.number_input("Revenue per Employee", min_value=0.0, step=0.01)
-gst_filed = st.number_input("GST Filed (1 if yes, 0 if no)", min_value=0.0, step=0.01)
-status_score = st.number_input("Status Score", min_value=0.0, step=0.01)
 
-st.subheader("Development Stages")
+# Development stage checkboxes
+st.subheader("Development Stage")
 proof_of_concept = st.checkbox("Proof of Concept")
 prototype_development = st.checkbox("Prototype Development")
 product_development = st.checkbox("Product Development")
 field_trials = st.checkbox("Field Trials")
 market_launch = st.checkbox("Market Launch")
 
-# Calculate dev_stage_score from checkboxes
-dev_stage_score = sum([
-    proof_of_concept,
-    prototype_development,
-    product_development,
-    field_trials,
-    market_launch
-])
+# Calculate development stage score
+dev_stage_score = (
+    int(proof_of_concept) +
+    int(prototype_development) +
+    int(product_development) +
+    int(field_trials) +
+    int(market_launch)
+)
+
+gst_filed = st.selectbox("GST Filed", options=[1, 0])
+
+# Status score (Active = 1, Inactive = 0)
+status_choice = st.selectbox("Status", options=["Active", "Inactive"])
+status_score = 1 if status_choice == "Active" else 0
 
 if st.button("Calculate Rank"):
     if startup_name.strip() == "":
