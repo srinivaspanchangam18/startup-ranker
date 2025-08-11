@@ -5,26 +5,28 @@ import os
 # File to store results
 DATA_FILE = "startup_results.csv"
 
-# Weight configuration
+# Weight configuration (total = 1.0)
 weights = {
     'turnover': 0.2,
-    'total_funding': 0.2,
+    'total_funding': 0.15,
     'employees': 0.15,
-    'dev_stage_score': 0.15,
+    'dev_stage_score': 0.1,
     'rev_per_emp': 0.1,
     'gst_filed': 0.1,
-    'status_score': 0.1
+    'status_score': 0.1,
+    'ip_score': 0.1  # IP field weight set to 0.1
 }
 
 # Maximum possible values for normalization
 max_values = {
-    'turnover': 1000000,       # Example: max turnover is 1M
-    'total_funding': 1000000,  # Example: max funding is 1M
-    'employees': 1000,         # Example: max 1000 employees
-    'dev_stage_score': 5,      # 5 stages max
-    'rev_per_emp': 100000,     # Example: max revenue per employee is 100k
-    'gst_filed': 1,            # 1 or 0
-    'status_score': 1          # 1 or 0
+    'turnover': 1000000,       
+    'total_funding': 1000000,  
+    'employees': 1000,         
+    'dev_stage_score': 5,      
+    'rev_per_emp': 100000,     
+    'gst_filed': 1,            
+    'status_score': 1,         
+    'ip_score': 10             
 }
 
 # Load existing results if file exists
@@ -42,6 +44,7 @@ turnover = st.number_input("Turnover", min_value=0.0, step=0.01)
 total_funding = st.number_input("Total Funding", min_value=0.0, step=0.01)
 employees = st.number_input("Number of Employees", min_value=0.0, step=0.01)
 rev_per_emp = st.number_input("Revenue per Employee", min_value=0.0, step=0.01)
+ip_score = st.number_input("IP Score (0–10)", min_value=0.0, max_value=10.0, step=0.1)
 
 # Development stage checkboxes
 st.subheader("Development Stage")
@@ -70,16 +73,17 @@ if st.button("Calculate Rank"):
     if startup_name.strip() == "":
         st.error("Please enter a startup name.")
     else:
-        # Normalize each metric before weighting
-        score = (
-            (turnover / max_values['turnover']) * weights['turnover'] +
-            (total_funding / max_values['total_funding']) * weights['total_funding'] +
-            (employees / max_values['employees']) * weights['employees'] +
-            (dev_stage_score / max_values['dev_stage_score']) * weights['dev_stage_score'] +
-            (rev_per_emp / max_values['rev_per_emp']) * weights['rev_per_emp'] +
-            (gst_filed / max_values['gst_filed']) * weights['gst_filed'] +
-            (status_score / max_values['status_score']) * weights['status_score']
-        )
+        # Normalize and calculate weighted score
+        score = sum([
+            (turnover / max_values['turnover']) * weights['turnover'],
+            (total_funding / max_values['total_funding']) * weights['total_funding'],
+            (employees / max_values['employees']) * weights['employees'],
+            (dev_stage_score / max_values['dev_stage_score']) * weights['dev_stage_score'],
+            (rev_per_emp / max_values['rev_per_emp']) * weights['rev_per_emp'],
+            (gst_filed / max_values['gst_filed']) * weights['gst_filed'],
+            (status_score / max_values['status_score']) * weights['status_score'],
+            (ip_score / max_values['ip_score']) * weights['ip_score']
+        ])
 
         # Add startup and score to session data
         st.session_state["results"] = pd.concat([
