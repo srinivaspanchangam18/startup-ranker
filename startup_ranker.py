@@ -44,7 +44,7 @@ turnover = st.number_input("Turnover", min_value=0.0, step=0.01)
 total_funding = st.number_input("Total Funding", min_value=0.0, step=0.01)
 employees = st.number_input("Number of Employees", min_value=0.0, step=0.01)
 rev_per_emp = st.number_input("Revenue per Employee", min_value=0.0, step=0.01)
-ip_score = st.number_input("IP Score (0–10)", min_value=0.0, max_value=10.0, step=0.1)
+ip_score = st.number_input("IP Score", min_value=0.0, max_value=10.0, step=0.1)
 
 # Quarter selection and score
 quarter = st.selectbox("Select Quarter", options=["Q1", "Q2", "Q3", "Q4"])
@@ -120,5 +120,6 @@ if st.button("Calculate Rank"):
 if not st.session_state["results"].empty:
     st.subheader("All Scored Startups")
     st.dataframe(st.session_state["results"].sort_values(by=["Rank", "Quarter"]))
+
 
 
