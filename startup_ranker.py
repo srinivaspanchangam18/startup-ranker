@@ -72,7 +72,7 @@ dev_stage_score = (
 gst_filed = st.selectbox("GST Filed", options=[1, 0])
 
 # Status score (Active = 1, Inactive = 0)
-status_choice = st.selectbox("Status", options=["Active", "Inactive"])
+status_choice = st.selectbox("Status", options=["Active", "Graduated"])
 status_score = 1 if status_choice == "Active" else 0
 
 if st.button("Calculate Rank"):
@@ -124,3 +124,4 @@ if st.button("Calculate Rank"):
 if not st.session_state["results"].empty:
     st.subheader("All Scored Startups")
     st.dataframe(st.session_state["results"].sort_values(by=["Rank", "Quarter"]))
+
