@@ -14,8 +14,7 @@ weights = {
     'rev_per_emp': 0.1,
     'gst_filed': 0.05,
     'status_score': 0.1,
-    'ip_score': 0.1,
-    'quarter_score': 0.2
+    'ip_score': 0.1
 }
 
 # Maximum possible values for normalization
@@ -27,8 +26,7 @@ max_values = {
     'rev_per_emp': 100000,
     'gst_filed': 1,
     'status_score': 1,
-    'ip_score': 10,
-    'quarter_score': 100
+    'ip_score': 10
 }
 
 # Load existing results if file exists
@@ -50,7 +48,6 @@ ip_score = st.number_input("IP Score (0–10)", min_value=0.0, max_value=10.0, s
 
 # Quarter selection and score
 quarter = st.selectbox("Select Quarter", options=["Q1", "Q2", "Q3", "Q4"])
-quarter_score = st.number_input("Quarter Score (0–100)", min_value=0.0, max_value=100.0, step=0.1)
 
 # Development stage checkboxes
 st.subheader("Development Stage")
@@ -88,8 +85,7 @@ if st.button("Calculate Rank"):
             (rev_per_emp / max_values['rev_per_emp']) * weights['rev_per_emp'],
             (gst_filed / max_values['gst_filed']) * weights['gst_filed'],
             (status_score / max_values['status_score']) * weights['status_score'],
-            (ip_score / max_values['ip_score']) * weights['ip_score'],
-            (quarter_score / max_values['quarter_score']) * weights['quarter_score']
+            (ip_score / max_values['ip_score']) * weights['ip_score']
         ])
 
         # Add startup, quarter, and score to session data
@@ -124,4 +120,5 @@ if st.button("Calculate Rank"):
 if not st.session_state["results"].empty:
     st.subheader("All Scored Startups")
     st.dataframe(st.session_state["results"].sort_values(by=["Rank", "Quarter"]))
+
 
