@@ -60,11 +60,12 @@ commercialization_launch = st.checkbox("Commercialization/Launch")
 
 # Calculate development stage score
 dev_stage_score = (
+    int(Ideation) +
     int(proof_of_concept) +
-    int(prototype_development) +
-    int(product_development) +
-    int(field_trials) +
-    int(market_launch)
+    int(prototype) +
+    int(MVP) +
+    int(Early_traction)+
+    int(commercialization_launch)
 )
 
 gst_filed = st.selectbox("GST Filed", options=[1, 0])
@@ -121,6 +122,7 @@ if st.button("Calculate Rank"):
 if not st.session_state["results"].empty:
     st.subheader("All Scored Startups")
     st.dataframe(st.session_state["results"].sort_values(by=["Rank", "Quarter"]))
+
 
 
 
