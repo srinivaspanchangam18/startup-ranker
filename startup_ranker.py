@@ -51,11 +51,12 @@ quarter = st.selectbox("Select Quarter", options=["Q1", "Q2", "Q3", "Q4"])
 
 # Development stage checkboxes
 st.subheader("Development Stage")
-proof_of_concept = st.checkbox("Proof of Concept")
-prototype_development = st.checkbox("Prototype Development")
-product_development = st.checkbox("Product Development")
-field_trials = st.checkbox("Field Trials")
-market_launch = st.checkbox("Market Launch")
+Ideation = st.checkbox("Ideation")
+proof_of_concept = st.checkbox("Proof Of Concept")
+prototype = st.checkbox("Prototype")
+MVP = st.checkbox("MVP")
+Early_traction = st.checkbox("Early Traction")
+commercialization/launch = st.checkbox("Commercialization/Launch")
 
 # Calculate development stage score
 dev_stage_score = (
@@ -120,6 +121,7 @@ if st.button("Calculate Rank"):
 if not st.session_state["results"].empty:
     st.subheader("All Scored Startups")
     st.dataframe(st.session_state["results"].sort_values(by=["Rank", "Quarter"]))
+
 
 
 
