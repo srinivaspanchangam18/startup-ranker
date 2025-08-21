@@ -42,7 +42,7 @@ st.title("Startup Ranker")
 startup_name = st.text_input("Enter Startup Name")
 turnover = st.number_input("Turnover", min_value=0.0, step=0.01)
 total_funding = st.number_input("Total Funding", min_value=0.0, step=0.01)
-employees = st.number_input("Number of Employees", min_value=0.0, step=0.01)
+employees = st.number_input("Number of Employees", min_value=0, step=1)
 rev_per_emp = st.number_input("Revenue per Employee", min_value=0.0, step=0.01)
 ip_score = st.number_input("IP Score", min_value=0.0, max_value=10.0, step=0.1)
 
@@ -122,6 +122,7 @@ if st.button("Calculate Rank"):
 if not st.session_state["results"].empty:
     st.subheader("All Scored Startups")
     st.dataframe(st.session_state["results"].sort_values(by=["Rank", "Quarter"]))
+
 
 
 
