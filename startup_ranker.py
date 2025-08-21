@@ -56,7 +56,7 @@ proof_of_concept = st.checkbox("Proof Of Concept")
 prototype = st.checkbox("Prototype")
 MVP = st.checkbox("MVP")
 Early_traction = st.checkbox("Early Traction")
-commercialization/launch = st.checkbox("Commercialization/Launch")
+commercialization_launch = st.checkbox("Commercialization/Launch")
 
 # Calculate development stage score
 dev_stage_score = (
@@ -121,6 +121,7 @@ if st.button("Calculate Rank"):
 if not st.session_state["results"].empty:
     st.subheader("All Scored Startups")
     st.dataframe(st.session_state["results"].sort_values(by=["Rank", "Quarter"]))
+
 
 
 
